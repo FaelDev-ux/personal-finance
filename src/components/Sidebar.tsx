@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom'
 import { useSupabaseAuth } from '../hooks/useSupabaseAuth'
 import { useMobileMenu } from '../hooks/useMobileMenu'
 import { DarkModeToggle } from './DarkModeToggle'
+import { ThemeToggleCompact } from './ThemeToggleCompact'
 import { MobileMenuToggle } from './MobileMenuToggle'
 import { Button } from './ui/Button'
 
@@ -31,12 +32,12 @@ export function Sidebar() {
   return (
     <>
       {/* Header Mobile */}
-      <header className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/70 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-        <div>
+      <header className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-slate-200 bg-white/70 px-3 sm:px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
+        <div className="flex-1">
           <h1 className="text-base font-semibold text-slate-900 dark:text-white">Finanças</h1>
         </div>
         <div className="flex items-center gap-2">
-          <DarkModeToggle />
+          <ThemeToggleCompact />
           <MobileMenuToggle />
         </div>
       </header>
@@ -92,7 +93,7 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="mt-auto flex flex-col gap-3">
-          <div className="md:hidden">
+          <div className="hidden md:block">
             <DarkModeToggle />
           </div>
 

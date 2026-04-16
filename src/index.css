@@ -5,9 +5,17 @@ body {
   height: 100%;
 }
 
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans;
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-300;
 }
 
 #root {
@@ -17,4 +25,37 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Transições suaves */
+html * {
+  @apply transition-colors duration-300;
+}
+
+/* Evitar transição em inputs durante digitação */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply transition-none;
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Cores de seleção responsivas ao tema */
+::selection {
+  @apply bg-purple-200 text-slate-900 dark:bg-purple-900/50 dark:text-slate-100;
+}
+
+/* Melhorar visibilidade de links */
+a {
+  @apply transition-colors duration-200;
+}
+
+a:focus-visible {
+  @apply outline-none ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-slate-950 rounded;
+}
+
+
 
