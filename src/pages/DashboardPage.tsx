@@ -4,6 +4,9 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { useSupabaseAuth } from '../hooks/useSupabaseAuth'
 import { useTransactions } from '../hooks/useTransactions'
 import { formatBRL, formatDateBR } from '../utils/format'
+import { Card } from '../components/ui/Card'
+import { Badge } from '../components/ui/Badge'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 
 const INCOME_COLOR = '#a855f7' // roxo
 const EXPENSE_COLOR = '#f43f5e' // rosa
@@ -38,55 +41,75 @@ export function DashboardPage() {
     [incomeTotal, expenseTotal],
   )
 
-  const lastTransactions = transactions.slice(0, 7)
+  const lastTransactions = transactions.slice(0, 10)
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 md:gap-5">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">Visão geral do seu mês e do seu saldo.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Visão geral do seu mês e do seu saldo.</p>
       </header>
 
-      {error ? <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">{error}</div> : null}
+      {error ? (
+        <div className="rounded-lg bg-rose-50 p-3 text-xs sm:text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">
+          {error}
+        </div>
+      ) : null}
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-          <div className="text-sm text-slate-600 dark:text-slate-300">Saldo total</div>
-          <div className="mt-2 text-2xl font-semibold">{formatBRL(balanceTotal)}</div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Receitas - despesas</div>
+      {/* Cards Resumo */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="p-3 sm:p-4">
+          <div className="space-y-2">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Saldo total</p>
+            <div className={`text-lg sm:text-2xl font-bold ${balanceTotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+              {formatBRL(balanceTotal)}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500">Receitas - despesas</p>
+          </div>
+        </Card>
+
+        <Card className="p-3 sm:p-4">
+          <div className="space-y-2">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Total de receitas</p>
+            <div className="text-lg sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {formatBRL(incomeTotal)}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500">Entradas do período</p>
+          </div>
+        </Card>
+
+        <Card className="p-3 sm:p-4">
+          <div className="space-y-2">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Total de despesas</p>
+            <div className="text-lg sm:text-2xl font-bold text-rose-600 dark:text-rose-400">
+              {formatBRL(expenseTotal)}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500">Saídas do período</p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Gráfico */}
+      <Card className="p-3 sm:p-4 md:p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">Receitas vs Despesas</h2>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Atualiza automaticamente</span>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-          <div className="text-sm text-slate-600 dark:text-slate-300">Total de receitas</div>
-          <div className="mt-2 text-2xl font-semibold text-purple-700 dark:text-purple-300">{formatBRL(incomeTotal)}</div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Entradas do período</div>
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-          <div className="text-sm text-slate-600 dark:text-slate-300">Total de despesas</div>
-          <div className="mt-2 text-2xl font-semibold text-rose-700 dark:text-rose-300">{formatBRL(expenseTotal)}</div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Saídas do período</div>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Receitas vs Despesas</h2>
-          <div className="text-xs text-slate-500 dark:text-slate-400">Atualiza automaticamente</div>
-        </div>
-
-        <div className="mt-3 h-[280px]">
-          {loading ? (
-            <div className="flex h-full items-center justify-center text-sm text-slate-500 dark:text-slate-400">Carregando gráfico...</div>
-          ) : (
+        {loading ? (
+          <div className="h-64 sm:h-80 flex items-center justify-center">
+            <LoadingSpinner size="md" message="Carregando gráfico..." />
+          </div>
+        ) : (
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={60}
-                  outerRadius={95}
+                  innerRadius={40}
+                  outerRadius={70}
                   stroke="none"
                 >
                   {chartData.map((entry) => (
@@ -99,63 +122,48 @@ export function DashboardPage() {
                 />
               </PieChart>
             </ResponsiveContainer>
-          )}
+          </div>
+        )}
+      </Card>
+
+      {/* Últimas Transações */}
+      <Card className="p-3 sm:p-4 md:p-6 overflow-hidden">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">Últimas transações</h2>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{lastTransactions.length} registros</span>
         </div>
-      </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Últimas transações</h2>
-          <div className="text-xs text-slate-500 dark:text-slate-400">Mostrando {lastTransactions.length} registros</div>
-        </div>
-
-        <div className="mt-3 overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead className="text-left text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-2 py-2">Data</th>
-                <th className="px-2 py-2">Título</th>
-                <th className="px-2 py-2">Categoria</th>
-                <th className="px-2 py-2">Tipo</th>
-                <th className="px-2 py-2 text-right">Valor</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {lastTransactions.length === 0 ? (
-                <tr>
-                  <td className="px-2 py-4 text-center text-slate-500" colSpan={5}>
-                    Nenhuma transação ainda.
-                  </td>
-                </tr>
-              ) : null}
-
-              {lastTransactions.map((t) => (
-                <tr key={t.id}>
-                  <td className="px-2 py-3 whitespace-nowrap text-slate-700 dark:text-slate-200">{formatDateBR(t.date)}</td>
-                  <td className="px-2 py-3 whitespace-nowrap text-slate-700 dark:text-slate-200">{t.title}</td>
-                  <td className="px-2 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                    {t.category_name ?? '—'}
-                  </td>
-                  <td className="px-2 py-3 whitespace-nowrap">
-                    {t.type === 'income' ? (
-                      <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
-                        Receita
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-                        Despesa
-                      </span>
+        {lastTransactions.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma transação ainda.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {lastTransactions.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white truncate">{t.title}</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant={t.type === 'income' ? 'income' : 'expense'} className="text-xs">
+                      {t.type === 'income' ? '↓ Receita' : '↑ Despesa'}
+                    </Badge>
+                    {t.category_name && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{t.category_name}</span>
                     )}
-                  </td>
-                  <td className="px-2 py-3 whitespace-nowrap text-right font-medium text-slate-800 dark:text-slate-50">
-                    {t.type === 'income' ? formatBRL(t.amount) : `-${formatBRL(t.amount)}`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{formatDateBR(t.date)}</span>
+                  </div>
+                </div>
+                <div className={`font-semibold text-sm sm:text-base whitespace-nowrap ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                  {t.type === 'income' ? '+' : '-'}{formatBRL(t.amount)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

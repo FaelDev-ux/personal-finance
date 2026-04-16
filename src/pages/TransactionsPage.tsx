@@ -8,6 +8,11 @@ import { useCategories } from '../hooks/useCategories'
 import { useTransactions } from '../hooks/useTransactions'
 import type { TransactionFormValues, TransactionType, UUID } from '../types'
 import { formatBRL, formatDateBR } from '../utils/format'
+import { Card, CardContent } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Badge } from '../components/ui/Badge'
+import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 
 const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
@@ -104,222 +109,208 @@ export function TransactionsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 md:gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Transações</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">CRUD completo: receitas, despesas e categorias.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Transações</h1>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">Gerencie suas receitas e despesas.</p>
       </header>
 
-      {txError ? <div className="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">{txError}</div> : null}
+      {txError && (
+        <div className="rounded-lg bg-rose-50 p-3 text-xs sm:text-sm text-rose-700 dark:bg-rose-950/40 dark:text-rose-200">
+          {txError}
+        </div>
+      )}
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      {/* Filtro */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-700 dark:text-slate-200">Filtro:</label>
+          <label className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">Filtro:</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
+            className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs sm:text-sm text-slate-900 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
           >
             <option value="all">Todas</option>
             <option value="income">Receitas</option>
             <option value="expense">Despesas</option>
           </select>
         </div>
-
         <div className="text-xs text-slate-500 dark:text-slate-400">
-          {txLoading ? 'Atualizando...' : `Exibindo ${transactions.length} transações`}
+          {txLoading ? 'Atualizando...' : `${transactions.length} transações`}
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
-        <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">{formModeLabel}</h2>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">O valor deve ser positivo. O tipo define receita/despesa.</p>
-            </div>
-            {editingId ? (
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-              >
-                Cancelar
-              </button>
-            ) : null}
-          </div>
-
-          <form className="mt-4 flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Tipo</label>
-                <select
-                  className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
-                  {...register('type')}
-                >
-                  <option value="income">Receita</option>
-                  <option value="expense">Despesa</option>
-                </select>
-                {errors.type ? <p className="text-xs text-rose-600">{errors.type.message}</p> : null}
+      {/* Layout responsivo: mobile = stack, desktop = grid */}
+      <div className="flex flex-col gap-4 md:gap-6 lg:grid lg:grid-cols-[1fr_2fr]">
+        {/* Formulário */}
+        <Card className="p-4 sm:p-5 md:p-6 order-2 lg:order-1">
+          <CardContent className="space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">{formModeLabel}</h2>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Preencha os campos abaixo.</p>
               </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Data</label>
-                <input
-                  type="date"
-                  className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
-                  {...register('date')}
-                />
-                {errors.date ? <p className="text-xs text-rose-600">{errors.date.message}</p> : null}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Título</label>
-              <input
-                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-800 dark:bg-slate-900"
-                placeholder="Ex.: Salário, Mercado..."
-                {...register('title')}
-              />
-              {errors.title ? <p className="text-xs text-rose-600">{errors.title.message}</p> : null}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Valor</label>
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-800 dark:bg-slate-900"
-                {...register('amount', { valueAsNumber: true })}
-              />
-              {errors.amount ? <p className="text-xs text-rose-600">{errors.amount.message}</p> : null}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Categoria (opcional)</label>
-              <select
-                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
-                {...register('category_id', { setValueAs: (v) => (v === '' ? null : v) })}
-              >
-                <option value="">Sem categoria</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {errors.category_id ? <p className="text-xs text-rose-600">{errors.category_id.message}</p> : null}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                disabled={isSubmitting}
-                type="submit"
-                className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-60"
-              >
-                {isSubmitting ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Adicionar'}
-              </button>
-              {editingId ? (
+              {editingId && (
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                  className="px-2 py-1 text-xs rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                 >
-                  Limpar
+                  ✕
                 </button>
-              ) : null}
+              )}
             </div>
-          </form>
-        </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/40">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Lista</h2>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Edita ou exclui diretamente.</div>
-          </div>
+            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+              {/* Type e Date em grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">Tipo</label>
+                  <select
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
+                    {...register('type')}
+                  >
+                    <option value="income">📥 Receita</option>
+                    <option value="expense">📤 Despesa</option>
+                  </select>
+                </div>
 
-          <div className="mt-3 overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead className="text-left text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-2 py-2">Data</th>
-                  <th className="px-2 py-2">Título</th>
-                  <th className="px-2 py-2">Categoria</th>
-                  <th className="px-2 py-2">Tipo</th>
-                  <th className="px-2 py-2 text-right">Valor</th>
-                  <th className="px-2 py-2 text-right">Ações</th>
-                </tr>
-              </thead>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">Data</label>
+                  <input
+                    type="date"
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
+                    {...register('date')}
+                  />
+                </div>
+              </div>
 
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {txLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-2 py-4 text-center text-slate-500">
-                      Carregando...
-                    </td>
-                  </tr>
-                ) : null}
+              {errors.type && <p className="text-xs text-rose-600">{errors.type.message}</p>}
+              {errors.date && <p className="text-xs text-rose-600">{errors.date.message}</p>}
 
-                {!txLoading && transactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-2 py-4 text-center text-slate-500">
-                      Nenhuma transação encontrada.
-                    </td>
-                  </tr>
-                ) : null}
+              <Input
+                label="Título"
+                placeholder="Ex.: Salário, Mercado..."
+                error={errors.title?.message}
+                {...register('title')}
+              />
 
+              <Input
+                label="Valor"
+                type="number"
+                inputMode="decimal"
+                placeholder="0.00"
+                step="0.01"
+                error={errors.amount?.message}
+                {...register('amount', { valueAsNumber: true })}
+              />
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">Categoria</label>
+                <select
+                  className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm outline-none dark:border-slate-800 dark:bg-slate-900"
+                  {...register('category_id', { setValueAs: (v) => (v === '' ? null : v) })}
+                >
+                  <option value="">Sem categoria</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="submit"
+                  isLoading={isSubmitting}
+                  disabled={isSubmitting}
+                  size="md"
+                  className="flex-1"
+                >
+                  {editingId ? 'Atualizar' : 'Adicionar'}
+                </Button>
+                {editingId && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    onClick={cancelEdit}
+                  >
+                    Limpar
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Lista de transações */}
+        <Card className="p-4 sm:p-5 md:p-6 order-1 lg:order-2">
+          <CardContent>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+              <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">Lista de transações</h2>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Clique para editar ou excluir</span>
+            </div>
+
+            {txLoading ? (
+              <LoadingSpinner size="md" message="Carregando transações..." />
+            ) : transactions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma transação encontrada.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
                 {transactions.map((t) => (
-                  <tr key={t.id}>
-                    <td className="px-2 py-3 whitespace-nowrap text-slate-700 dark:text-slate-200">
-                      {formatDateBR(t.date)}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-slate-700 dark:text-slate-200">{t.title}</td>
-                    <td className="px-2 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                      {t.category_name ?? '—'}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap">
-                      {t.type === 'income' ? (
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
-                          Receita
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-                          Despesa
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-right font-medium">
-                      {t.type === 'income' ? (
-                        <span className="text-emerald-700 dark:text-emerald-300">{formatBRL(t.amount)}</span>
-                      ) : (
-                        <span className="text-rose-700 dark:text-rose-300">-{formatBRL(t.amount)}</span>
-                      )}
-                    </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-right">
-                      <div className="flex justify-end gap-2">
+                  <div
+                    key={t.id}
+                    className="flex items-start justify-between gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-slate-900 dark:text-white truncate">{t.title}</p>
+                      <div className="flex flex-wrap gap-2 mt-1.5">
+                        <Badge 
+                          variant={t.type === 'income' ? 'income' : 'expense'} 
+                          className="text-xs"
+                        >
+                          {t.type === 'income' ? '📥 Receita' : '📤 Despesa'}
+                        </Badge>
+                        {t.category_name && (
+                          <span className="inline-block px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300">
+                            {t.category_name}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{formatDateBR(t.date)}</p>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`font-semibold text-sm whitespace-nowrap ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        {t.type === 'income' ? '+' : '-'}{formatBRL(t.amount)}
+                      </span>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
                           onClick={() => startEdit(t.id)}
-                          className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                          className="px-2 py-1 text-xs rounded-md bg-purple-100 hover:bg-purple-200 text-purple-700 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 dark:text-purple-300"
                         >
                           Editar
                         </button>
                         <button
                           type="button"
                           onClick={() => onDelete(t.id)}
-                          className="rounded-md border border-rose-200 bg-white px-2 py-1 text-xs text-rose-700 hover:bg-rose-50 dark:border-rose-900/50 dark:bg-slate-900 dark:text-rose-200"
+                          className="px-2 py-1 text-xs rounded-md bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 dark:text-rose-300"
                         >
                           Excluir
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
